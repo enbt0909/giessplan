@@ -97,3 +97,5 @@ Du darfst es frei nutzen, verändern und erweitern.
 Autor: 🧑‍💻 Eugen Beirit
 Version: 1.0.0
 Stand: November 2025
+
+<https://enbt0909.github.io/giessplan>
