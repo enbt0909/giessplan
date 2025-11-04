@@ -1,0 +1,27 @@
+body {
+  background: #f8fafc;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+.card {
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(13, 38, 59, 0.08);
+}
+
+#results p {
+  font-size: 1.05rem;
+}
+
+.text-muted {
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.btn-primary:hover {
+  background-color: #1e40af;
+  border-color: #1e40af;
+}
