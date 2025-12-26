@@ -438,6 +438,20 @@ body {
   box-shadow: var(--row-shadow);
 }
 
+#weather-status {
+  color: var(--result-label);
+  font-weight: 700;
+}
+
+#weather-meta {
+  color: var(--muted);
+}
+
+#weather-suggestion {
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .nutrient-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
