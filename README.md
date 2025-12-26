@@ -1,10 +1,16 @@
-# 💧 Gießplan & Pflege-Checker (Django-App)
+# 💧 Gießplan & Pflege-Checker (Django)
 
-Interaktive Gieß-/Dünger- und Wetter-Check-App, jetzt als Django-Projekt mit statischen Assets (Bootstrap + Vanilla JS).
+Interaktive Gieß-/Dünger- und Wetter-Check-App (Bootstrap + Vanilla JS) mit serverseitigem OpenWeather-Proxy.
 
-## Schnellstart (Lokal)
+## Voraussetzungen
 
-1) Python & Pipenv/venv bereitstellen  
+- Python 3.9+ (venv empfohlen)
+- Optional Node, falls du eigene Frontend-Builds ergänzen willst
+
+## Schnellstart
+
+1. Umgebung aufsetzen
+
    ```bash
    cd giessplan
    python3 -m venv .venv
@@ -12,31 +18,27 @@ Interaktive Gieß-/Dünger- und Wetter-Check-App, jetzt als Django-Projekt mit s
    pip install -r requirements.txt
    ```
 
-2) OpenWeather-Key hinterlegen (für Wetter-Vorschläge)  
+2. Konfiguration hinterlegen
+
    ```bash
-   cp .env.example .env
-   # OPENWEATHER_KEY in .env setzen (wird serverseitig genutzt)
+   cp .env.example .env          # OPENWEATHER_KEY setzen, optional DJANGO_SECRET_KEY/DJANGO_DEBUG
    ```
 
-3) Django starten  
+3. Datenbank & Server starten
+
    ```bash
    python manage.py migrate
-   python manage.py runserver
+   python manage.py runserver    # http://127.0.0.1:8000/
    ```
-   Öffne http://127.0.0.1:8000/
 
-## Technologie-Stack
-- Django (Templates, Staticfiles)
-- Bootstrap 5 + Manrope
-- Vanilla JS (Berechnung, LocalStorage, OpenWeather-Fetch)
+## Funktionen
 
-## Berechnungslogik (Reminder)
-- Gießmenge: 20–25 % des Topfvolumens
-- Spülmenge: 3 × Topfvolumen
-- Intervall: <300 W → 4–6 Tage; ≥300 W → 3–5 Tage; ≥600 W → 2–4 Tage
-- BIOBIZZ-Dosierung: Grow 2 ml/L, CalMag 1 ml/L, TopMax 1 ml/L, BioBloom 2 ml/L (auf Basis der Gießmenge pro Vorgang)
+- Berechnet Gießmenge (20–25 % Volumen), Spülmenge (3×) und Intervall (abhängig von W).
+- BIOBIZZ-Dosierung: Grow 2 ml/L, CalMag 1 ml/L, TopMax 1 ml/L, BioBloom 2 ml/L (Basis: Gießmenge).
+- Wetter-Check über `/api/weather/`; Key bleibt serverseitig, Frontend ruft nur die API.
 
-## Deploy-Hinweise
-- Wetter-Key bleibt auf dem Server (Proxy unter /api/weather/); kein clientseitiges env.js mehr nötig.
-- SECRET_KEY/DEBUG per Umgebungsvariablen setzen (`DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0` im Prod).
-- Für GitHub Pages (statisch): `docs/index.html` zeigt einen „In Arbeit“-Hinweis, bis ein vollwertiges Deployment läuft.
+## Deployment
+
+- Umgebungsvariablen: `OPENWEATHER_KEY` serverseitig setzen; `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0` für Prod.
+- Staticfiles: Für Produktion `python manage.py collectstatic` einplanen (aktuelles Setup nutzt App-Static).
+- GitHub Pages (statisch): `docs/index.html` zeigt eine „In Arbeit“-Seite. Pages auf Branch `main`, Folder `/docs` konfigurieren, bis das echte Deployment live ist.
