@@ -1,18 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
   const DEFAULTS = { pot: 40, watts: 200 };
-  const STORAGE_KEYS = { pot: "pot", watts: "watts" };
-  const potInput = document.getElementById("pot");
-  const wattsInput = document.getElementById("watts");
-  const litersRange = document.getElementById("litersRange");
-  const flush = document.getElementById("flush");
-  const interval = document.getElementById("interval");
-  const calcBtn = document.getElementById("calc-btn");
-  const resetBtn = document.getElementById("reset-btn");
-  const cityInput = document.getElementById("city");
-  const weatherBtn = document.getElementById("weather-btn");
-  const weatherStatus = document.getElementById("weather-status");
-  const weatherMeta = document.getElementById("weather-meta");
-  const weatherSuggestion = document.getElementById("weather-suggestion");
+  const STORAGE_KEYS = { pot: "pot", watts: "watts", city: "city" };
+
+  const dom = {
+    potInput: document.getElementById("pot"),
+    wattsInput: document.getElementById("watts"),
+    litersRange: document.getElementById("litersRange"),
+    flush: document.getElementById("flush"),
+    interval: document.getElementById("interval"),
+    calcBtn: document.getElementById("calc-btn"),
+    resetBtn: document.getElementById("reset-btn"),
+    cityInput: document.getElementById("city"),
+    weatherBtn: document.getElementById("weather-btn"),
+    weatherStatus: document.getElementById("weather-status"),
+    weatherMeta: document.getElementById("weather-meta"),
+    weatherSuggestion: document.getElementById("weather-suggestion"),
+  };
 
   const nutrientConfig = [
     { key: "grow", elementId: "grow-amount", dosePerLiter: 2 },
@@ -26,23 +29,32 @@ document.addEventListener("DOMContentLoaded", () => {
     return acc;
   }, {});
 
+  const storage = {
+    number(key, fallback) {
+      const stored = localStorage.getItem(key);
+      const num = parseFloat(stored);
+      return Number.isFinite(num) ? num : fallback;
+    },
+    text(key, fallback = "") {
+      return localStorage.getItem(key) || fallback;
+    },
+    saveInputs(pot, watts) {
+      localStorage.setItem(STORAGE_KEYS.pot, pot);
+      localStorage.setItem(STORAGE_KEYS.watts, watts);
+    },
+    saveCity(city) {
+      localStorage.setItem(STORAGE_KEYS.city, city);
+    },
+  };
+
+  const format = {
+    range(min, max, unit) {
+      return `${min.toFixed(1)}–${max.toFixed(1)} ${unit}`;
+    },
+  };
+
   function readNumber(input) {
     return parseFloat(input.value);
-  }
-
-  function loadStoredNumber(key, fallback) {
-    const stored = localStorage.getItem(key);
-    const num = parseFloat(stored);
-    return Number.isFinite(num) ? num : fallback;
-  }
-
-  function loadStoredText(key, fallback = "") {
-    return localStorage.getItem(key) || fallback;
-  }
-
-  function saveInputs(pot, watts) {
-    localStorage.setItem(STORAGE_KEYS.pot, pot);
-    localStorage.setItem(STORAGE_KEYS.watts, watts);
   }
 
   function calculateWatering(pot) {
@@ -73,15 +85,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const watering = calculateWatering(pot);
     const intervalData = calculateInterval(watts);
 
-    litersRange.textContent = `${watering.minLit.toFixed(1)}–${watering.maxLit.toFixed(1)} L`;
-    flush.textContent = `${watering.flushLit.toFixed(1)} L`;
-    interval.textContent = `${intervalData.low}–${intervalData.high} Tage`;
+    dom.litersRange.textContent = format.range(watering.minLit, watering.maxLit, "L");
+    dom.flush.textContent = `${watering.flushLit.toFixed(1)} L`;
+    dom.interval.textContent = `${intervalData.low}–${intervalData.high} Tage`;
     updateNutrients(watering.minLit, watering.maxLit);
   }
 
   function recalc() {
-    const pot = readNumber(potInput);
-    const watts = readNumber(wattsInput);
+    const pot = readNumber(dom.potInput);
+    const watts = readNumber(dom.wattsInput);
 
     if (!Number.isFinite(pot) || !Number.isFinite(watts) || pot <= 0 || watts <= 0) {
       alert("Bitte gültige positive Werte eingeben!");
@@ -89,31 +101,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     renderResults(pot, watts);
-    saveInputs(pot, watts);
+    storage.saveInputs(pot, watts);
   }
 
   function resetDefaults() {
-    potInput.value = DEFAULTS.pot;
-    wattsInput.value = DEFAULTS.watts;
+    dom.potInput.value = DEFAULTS.pot;
+    dom.wattsInput.value = DEFAULTS.watts;
     recalc();
   }
 
   function hydrateFromStorage() {
-    potInput.value = loadStoredNumber(STORAGE_KEYS.pot, DEFAULTS.pot);
-    wattsInput.value = loadStoredNumber(STORAGE_KEYS.watts, DEFAULTS.watts);
+    dom.potInput.value = storage.number(STORAGE_KEYS.pot, DEFAULTS.pot);
+    dom.wattsInput.value = storage.number(STORAGE_KEYS.watts, DEFAULTS.watts);
+    dom.cityInput.value = storage.text(STORAGE_KEYS.city, "");
   }
 
   async function fetchWeather() {
-    const city = cityInput.value.trim();
+    const city = dom.cityInput.value.trim();
     if (!city) {
       alert("Bitte einen Ort/Stadt eingeben.");
       return;
     }
 
-    weatherStatus.textContent = "Lade Wetterdaten...";
-    weatherMeta.textContent = city;
-    weatherSuggestion.textContent = "—";
-    weatherSuggestion.classList.remove("text-success", "text-warning");
+    dom.weatherStatus.textContent = "Lade Wetterdaten...";
+    dom.weatherMeta.textContent = city;
+    dom.weatherSuggestion.textContent = "—";
+    dom.weatherSuggestion.classList.remove("text-success", "text-warning");
 
     try {
       const response = await fetch(`/api/weather/?city=${encodeURIComponent(city)}`);
@@ -131,25 +144,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const data = await response.json();
 
-      weatherStatus.textContent = `${data.temp.toFixed(1)}°C, ${data.description}`;
-      weatherMeta.textContent = `Luftfeuchte ${data.humidity}% · Wind ${data.wind_kmh.toFixed(1)} km/h`;
-      weatherSuggestion.textContent = data.suggestion?.text || "—";
-      if (data.suggestion?.tone === "ok") weatherSuggestion.classList.add("text-success");
-      if (data.suggestion?.tone === "warn") weatherSuggestion.classList.add("text-warning");
+      dom.weatherStatus.textContent = `${data.temp.toFixed(1)}°C, ${data.description}`;
+      dom.weatherMeta.textContent = `Luftfeuchte ${data.humidity}% · Wind ${data.wind_kmh.toFixed(1)} km/h`;
+      dom.weatherSuggestion.textContent = data.suggestion?.text || "—";
+      if (data.suggestion?.tone === "ok") dom.weatherSuggestion.classList.add("text-success");
+      if (data.suggestion?.tone === "warn") dom.weatherSuggestion.classList.add("text-warning");
 
-      localStorage.setItem("city", city);
+      storage.saveCity(city);
     } catch (err) {
-      weatherStatus.textContent = "Wetterdaten konnten nicht geladen werden.";
-      weatherMeta.textContent = err.message || "Unbekannter Fehler";
-      weatherSuggestion.textContent = "—";
+      dom.weatherStatus.textContent = "Wetterdaten konnten nicht geladen werden.";
+      dom.weatherMeta.textContent = err.message || "Unbekannter Fehler";
+      dom.weatherSuggestion.textContent = "—";
     }
   }
 
-  calcBtn.addEventListener("click", recalc);
-  resetBtn.addEventListener("click", resetDefaults);
-  weatherBtn.addEventListener("click", fetchWeather);
+  dom.calcBtn.addEventListener("click", recalc);
+  dom.resetBtn.addEventListener("click", resetDefaults);
+  dom.weatherBtn.addEventListener("click", fetchWeather);
 
   hydrateFromStorage();
-  cityInput.value = loadStoredText("city", "");
   recalc();
 });
